@@ -1,7 +1,19 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "tanstack-start-app",
+  "name": "universidad-rust",
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry"
+  "main": "@tanstack/react-start/server-entry",
+  // Public env vars (inlined into the bundle by Vite at build time).
+  // For production, replace with prod Convex URLs and the actual workers.dev URL.
+  // Override per-environment with `wrangler deploy --env <name>` or via dashboard.
+  "vars": {
+    "VITE_CONVEX_URL": "https://prestigious-firefly-181.convex.cloud",
+    "VITE_CONVEX_SITE_URL": "https://prestigious-firefly-181.convex.site",
+    "VITE_SITE_URL": "https://universidad-rust.arturo97xd.workers.dev",
+  },
+  // When you create a production Convex deployment with `bunx convex deploy --prod`,
+  // copy its prod URL here. Then deploy this Worker, get the *.workers.dev URL,
+  // and set it as SITE_URL in Convex prod with:
+  //   bunx convex env set SITE_URL https://universidad-rust.<your-account>.workers.dev --prod
 }
