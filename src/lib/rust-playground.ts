@@ -23,6 +23,9 @@ export type ExecuteResponse = {
 
 const ENDPOINT = 'https://play.rust-lang.org/execute'
 
+const MAX_ATTEMPTS = 3
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
 export async function executeRust(req: ExecuteRequest): Promise<ExecuteResponse> {
   const body = {
     channel: req.channel ?? 'stable',
@@ -34,19 +37,47 @@ export async function executeRust(req: ExecuteRequest): Promise<ExecuteResponse>
     backtrace: req.backtrace ?? false,
   }
 
-  const res = await fetch(ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  })
+  // play.rust-lang.org is a free public service that occasionally returns 5xx
+  // or drops connections under load. Those are transient, so retry with a short
+  // backoff before surfacing an error. 4xx (our fault) fails fast.
+  let lastError: Error | null = null
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    let res: Response
+    try {
+      res = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+    } catch {
+      // Network / CORS hiccup — transient.
+      lastError = new Error(
+        'No se pudo conectar con Rust Playground. Revisa tu conexión e intenta de nuevo.',
+      )
+      if (attempt < MAX_ATTEMPTS) {
+        await delay(500 * attempt)
+        continue
+      }
+      throw lastError
+    }
 
-  if (!res.ok) {
+    if (res.ok) return res.json()
+
+    if (res.status >= 500 && attempt < MAX_ATTEMPTS) {
+      // Transient server error — wait and retry.
+      lastError = new Error(`Rust Playground respondió ${res.status}.`)
+      await delay(500 * attempt)
+      continue
+    }
+
     throw new Error(
-      `Rust Playground respondió ${res.status}. Intenta de nuevo en unos segundos.`,
+      res.status >= 500
+        ? 'El servidor de Rust Playground está teniendo problemas (500). Espera unos segundos y vuelve a intentarlo.'
+        : `Rust Playground respondió ${res.status}. Intenta de nuevo en unos segundos.`,
     )
   }
 
-  return res.json()
+  throw lastError ?? new Error('No se pudo ejecutar el código.')
 }
 
 // ─── Auto-verification ─────────────────────────────────────────────────────────
