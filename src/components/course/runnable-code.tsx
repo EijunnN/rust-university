@@ -44,10 +44,13 @@ type Props = {
   // whether all assertions pass. `onVerified` fires with the classified result.
   tests?: string
   onVerified?: (result: VerifyResult) => void
+  // El código corre con `cargo test` (lib + #[test]) en vez de `fn main`.
+  // Para lecciones donde el alumno escribe sus propios tests.
+  testMode?: boolean
 }
 
 export const RunnableCode = forwardRef<RunnableCodeHandle, Props>(function RunnableCode(
-  { initialCode, staticHtml, className, persistKey, minHeight, tests, onVerified },
+  { initialCode, staticHtml, className, persistKey, minHeight, tests, onVerified, testMode },
   ref,
 ) {
   const hostRef = useRef<HTMLDivElement | null>(null)
@@ -104,6 +107,11 @@ export const RunnableCode = forwardRef<RunnableCodeHandle, Props>(function Runna
             '&': { fontSize: '0.85rem' },
             '.cm-content': { fontFamily: 'var(--font-mono)' },
             '.cm-gutters': { fontFamily: 'var(--font-mono)' },
+            // En pantallas táctiles, <16px hace que iOS haga zoom forzado al
+            // enfocar el editor. 16px lo evita y además se lee mejor con dedos.
+            '@media (pointer: coarse)': {
+              '&': { fontSize: '1rem' },
+            },
             ...(minHeight ? { '.cm-scroller': { minHeight } } : {}),
           }),
           persistExt,
@@ -159,7 +167,7 @@ export const RunnableCode = forwardRef<RunnableCodeHandle, Props>(function Runna
     setErrorMessage(null)
     setVerifyResult(null)
     try {
-      const result = await executeRust({ code })
+      const result = await executeRust({ code, tests: testMode })
       setStdout(result.stdout)
       setStderr(result.stderr)
       setStatus(result.success ? 'done' : 'error')
@@ -167,7 +175,7 @@ export const RunnableCode = forwardRef<RunnableCodeHandle, Props>(function Runna
       setErrorMessage(err instanceof Error ? err.message : 'Error desconocido')
       setStatus('error')
     }
-  }, [])
+  }, [testMode])
 
   const handleVerify = useCallback(async () => {
     const view = viewRef.current
@@ -211,12 +219,13 @@ export const RunnableCode = forwardRef<RunnableCodeHandle, Props>(function Runna
 
   return (
     <div className={`rounded-lg border overflow-hidden bg-card ${className ?? ''}`}>
-      {/* Toolbar */}
-      <div className="flex items-center justify-between gap-2 px-3 py-2 border-b bg-muted/30">
+      {/* Toolbar — flex-wrap para que los botones bajen de línea en <360px
+          en vez de desbordar horizontalmente. */}
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 border-b bg-muted/30">
         <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-          Rust · editable
+          {testMode ? 'Rust · cargo test' : 'Rust · editable'}
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Button
             variant="ghost"
             size="sm"
@@ -242,7 +251,7 @@ export const RunnableCode = forwardRef<RunnableCodeHandle, Props>(function Runna
             ) : (
               <>
                 <Play className="h-3 w-3 mr-1 fill-current" />
-                Ejecutar
+                {testMode ? 'Ejecutar tests' : 'Ejecutar'}
               </>
             )}
           </Button>
@@ -272,15 +281,24 @@ export const RunnableCode = forwardRef<RunnableCodeHandle, Props>(function Runna
             dangerouslySetInnerHTML={{ __html: staticHtml }}
           />
         )}
+        {/* En mobile el editor no puede comerse el viewport completo: con
+            min(480px, 55dvh) siempre queda contexto de página visible y el
+            scroll táctil de la página sigue siendo alcanzable. */}
         <div
           ref={hostRef}
-          className={mounted ? '[&_.cm-editor]:max-h-[480px]' : 'sr-only'}
+          role="region"
+          aria-label="Editor de código Rust"
+          className={
+            mounted ? '[&_.cm-editor]:max-h-[min(480px,55dvh)]' : 'sr-only'
+          }
         />
       </div>
 
       {/* Verification verdict banner */}
       {verifyResult && (
         <div
+          role="status"
+          aria-live="polite"
           className={`border-t px-3 py-2.5 flex items-start gap-2 text-sm ${
             verifyResult.passed
               ? 'bg-success/10 text-success-foreground'
@@ -302,7 +320,10 @@ export const RunnableCode = forwardRef<RunnableCodeHandle, Props>(function Runna
       {(status === 'done' || status === 'error' || stdout || stderr || errorMessage) && (
         <div className="border-t bg-muted/20 px-3 py-3 space-y-2">
           {errorMessage && (
-            <div className="text-xs text-destructive font-mono whitespace-pre-wrap">
+            <div
+              role="alert"
+              className="text-xs text-destructive font-mono whitespace-pre-wrap"
+            >
               {errorMessage}
             </div>
           )}

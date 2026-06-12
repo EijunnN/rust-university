@@ -26,12 +26,15 @@ export function FadedExercise({
   stageInstructionsHast,
   stageCodeHtml,
   solutionHtml,
+  persistKey,
 }: {
   block: FadedExerciseBlock
   introHast?: Root
   stageInstructionsHast: Root[]
   stageCodeHtml: string[]
   solutionHtml: string
+  // El código del alumno sobrevive recargas (una clave por etapa).
+  persistKey?: string
 }) {
   const [stageIdx, setStageIdx] = useState(0)
   const [done, setDone] = useState(false)
@@ -117,7 +120,15 @@ export function FadedExercise({
                   ) : (
                     <span className="tabular-nums">{i + 1}</span>
                   )}
-                  <span className="hidden sm:inline">{STAGE_LABEL[s.kind]}</span>
+                  {/* En mobile solo la etapa activa muestra su etiqueta; las
+                      demás quedan como número para no desbordar. */}
+                  <span
+                    className={
+                      state === 'active' ? 'inline' : 'hidden sm:inline'
+                    }
+                  >
+                    {STAGE_LABEL[s.kind]}
+                  </span>
                 </div>
                 {i < block.stages.length - 1 && (
                   <div className="h-px flex-1 bg-border" />
@@ -177,6 +188,7 @@ export function FadedExercise({
                 staticHtml={stageCodeHtml[stageIdx]}
                 tests={block.tests}
                 onVerified={handleVerified}
+                persistKey={persistKey ? `${persistKey}-s${stageIdx}` : undefined}
               />
             )}
           </>

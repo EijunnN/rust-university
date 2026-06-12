@@ -27,12 +27,15 @@ const MAX_ATTEMPTS = 3
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export async function executeRust(req: ExecuteRequest): Promise<ExecuteResponse> {
+  const runTests = req.tests ?? false
   const body = {
     channel: req.channel ?? 'stable',
     mode: req.mode ?? 'debug',
     edition: req.edition ?? '2021',
-    crateType: 'bin' as const,
-    tests: req.tests ?? false,
+    // Con tests, el playground compila como lib y corre `cargo test`
+    // (no hace falta fn main; corre las funciones #[test]).
+    crateType: runTests ? ('lib' as const) : ('bin' as const),
+    tests: runTests,
     code: req.code,
     backtrace: req.backtrace ?? false,
   }

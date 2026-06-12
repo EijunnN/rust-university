@@ -13,6 +13,7 @@ export function ExerciseBlock({
   solutionHtml,
   explanationHast,
   hintsHast,
+  persistKey,
 }: {
   block: ExerciseBlockType
   // Prose-y content goes through HAST so it picks up glossary terms etc.
@@ -22,6 +23,8 @@ export function ExerciseBlock({
   // Code blocks stay as static highlighted HTML — Shiki's output IS the point.
   starterHtml: string
   solutionHtml: string
+  // El código del alumno sobrevive recargas y navegación (clave de localStorage).
+  persistKey?: string
 }) {
   const [hintsShown, setHintsShown] = useState(0)
   const [solutionRevealed, setSolutionRevealed] = useState(false)
@@ -59,6 +62,8 @@ export function ExerciseBlock({
             <RunnableCode
               initialCode={block.starterCode}
               staticHtml={starterHtml}
+              persistKey={persistKey}
+              testMode={block.testMode}
             />
           ) : (
             <div

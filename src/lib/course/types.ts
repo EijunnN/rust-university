@@ -23,6 +23,9 @@ export type CodeBlock = {
   language: CodeLanguage
   code: string
   runnable: boolean
+  // Ejecuta con `cargo test` (crate lib + tests) en vez de `fn main`.
+  // Para bloques que enseñan #[test]: el alumno ve la salida real del runner.
+  testMode?: boolean
 }
 
 export type CalloutBlock = {
@@ -49,6 +52,9 @@ export type QuizBlock = {
   type: 'quiz'
   question: string
   options: QuizOption[]
+  // markdown — el "porqué" de la respuesta correcta. Se muestra al resolver
+  // (acierto o revelado). Un quiz sin explicación evalúa; con ella, enseña.
+  explanation?: string
 }
 
 // Practical coding exercise. MVP flow: user reads prompt + starter, then
@@ -62,6 +68,9 @@ export type ExerciseBlock = {
   language: CodeLanguage             // usually 'rust'
   hints?: string[]                   // markdown hints, revealed progressively
   explanation?: string               // markdown explanation after the solution
+  // El código del alumno corre con `cargo test` (escribe sus propios #[test])
+  // en vez de necesitar un fn main.
+  testMode?: boolean
 }
 
 // Productive failure (Kapur): present a problem the learner can't solve YET,
@@ -77,6 +86,10 @@ export type ChallengeBlock = {
   tests: string // verification harness with asserts + success sentinel
   solution: string
   reveal: string // markdown — the teaching moment, unlocked after an attempt
+  // markdown hints, revealed progressively after a failed attempt. Productive
+  // failure works when the struggle stays *productive* — hints keep a stuck
+  // learner in the game without giving the answer away.
+  hints?: string[]
 }
 
 // Faded scaffolding (worked → faded → solo). The support is withdrawn stage by

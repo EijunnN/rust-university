@@ -191,6 +191,96 @@ export const GLOSSARY: GlossaryEntry[] = [
     short:
       'Garantía de que el programa no leerá ni escribirá memoria que no le corresponde. Los lenguajes con seguridad de memoria evitan crashes y vulnerabilidades comunes (null pointers, buffer overflows).',
   },
+  {
+    id: 'move',
+    labels: ['move', 'moves', 'movido', 'se mueve', 'mover el ownership'],
+    short:
+      'Transferir el ownership de un valor a otra variable o función. Después del move, la variable original deja de ser válida — así Rust garantiza que cada dato tenga un solo dueño y se libere una sola vez.',
+  },
+  {
+    id: 'copy',
+    labels: ['trait copy', 'tipos copy', 'es copy'],
+    short:
+      'Habilidad de un tipo de duplicarse automáticamente al asignarlo o pasarlo a una función, en vez de moverse. La tienen los tipos pequeños del stack: números, `bool`, `char`. `String` y `Vec` NO la tienen.',
+  },
+  {
+    id: 'clone',
+    labels: ['clone()', '.clone()', 'clonar'],
+    short:
+      'Copia explícita y profunda de un dato. Para tipos con memoria en el heap (como `String`), `.clone()` reserva memoria nueva y duplica el contenido. Rust te obliga a escribirlo para que el costo sea visible.',
+  },
+  {
+    id: 'referencia',
+    labels: ['referencia', 'referencias', 'reference', 'references'],
+    short:
+      'Un “préstamo” de un dato: te deja leerlo (`&T`) o modificarlo (`&mut T`) sin volverte su dueño. Se crea con `&`. El compilador garantiza que ninguna referencia apunte a un dato ya liberado.',
+  },
+  {
+    id: 'slice',
+    labels: ['slice', 'slices', 'string slice'],
+    short:
+      'Una “ventana” a una porción contigua de datos existentes — no copia nada, solo guarda puntero y longitud. `&str` es un slice de texto; `&[i32]` es un slice de números. Depende de que el dato original siga vivo.',
+  },
+  {
+    id: 'pattern-matching',
+    labels: ['pattern matching', 'match exhaustivo'],
+    short:
+      'Comparar un valor contra “formas” posibles (patrones) y ejecutar código según cuál calce. En Rust se hace con `match`, que además es exhaustivo: el compilador te obliga a cubrir todos los casos.',
+  },
+  {
+    id: 'scope',
+    labels: ['scope', 'alcance', 'ámbito', 'ambito'],
+    short:
+      'La zona del código donde una variable existe y puede usarse — en Rust, delimitada por llaves `{}`. Al salir del scope, la variable “muere” y Rust libera sus recursos automáticamente (llama a `drop`).',
+  },
+  {
+    id: 'shadowing',
+    labels: ['shadowing', 'shadowear'],
+    short:
+      'Declarar una variable nueva con el mismo nombre que una anterior usando `let`. La nueva “tapa” a la vieja. Útil para transformar un valor en pasos sin inventar nombres (`let edad = edad.trim().parse()`).',
+  },
+  {
+    id: 'mutabilidad',
+    labels: ['mutabilidad', 'inmutable por defecto', 'mutable', 'mut'],
+    short:
+      'En Rust las variables son inmutables (no cambian) salvo que las declares con `mut`. Hacer la mutación explícita y visible es parte del diseño: lees `mut` y sabes que ese valor va a cambiar.',
+  },
+  {
+    id: 'option',
+    labels: ['option<t>', 'tipo option'],
+    short:
+      'El tipo de Rust para “puede haber un valor o no”: `Some(valor)` o `None`. Reemplaza al `null` de otros lenguajes, con una diferencia clave: el compilador te obliga a manejar el caso `None`.',
+  },
+  {
+    id: 'result',
+    labels: ['result<t, e>', 'tipo result'],
+    short:
+      'El tipo de Rust para operaciones que pueden fallar: `Ok(valor)` o `Err(error)`. Los errores esperables se devuelven como datos (no excepciones invisibles), y el operador `?` los propaga con elegancia.',
+  },
+  {
+    id: 'closure',
+    labels: ['closure', 'closures', 'función anónima', 'funcion anonima'],
+    short:
+      'Una función sin nombre que puedes guardar en una variable y que “captura” variables de su entorno. Se escribe `|args| cuerpo`. Es el combustible de los iteradores: `.filter(|n| n > 0)`.',
+  },
+  {
+    id: 'iterador',
+    labels: ['iterador', 'iteradores', 'iterator', 'iterators'],
+    short:
+      'Un valor que produce elementos de a uno, bajo demanda (lazy). Se encadenan transformaciones (`.map`, `.filter`) que no ejecutan nada hasta llegar a un método terminal como `.collect()` o `.sum()`.',
+  },
+  {
+    id: 'generics',
+    labels: ['generics', 'genéricos', 'genericos', 'tipo genérico', 'tipo generico'],
+    short:
+      'Escribir código que funciona para varios tipos a la vez usando parámetros de tipo: `Vec<T>` funciona con cualquier `T`. Rust genera versiones especializadas al compilar, así que no cuesta rendimiento.',
+  },
+  {
+    id: 'dangling-reference',
+    labels: ['dangling reference', 'referencia colgante', 'referencias colgantes'],
+    short:
+      'Una referencia que apunta a memoria ya liberada — uno de los bugs más peligrosos en C/C++. En Rust no compilan: el borrow checker verifica que toda referencia viva menos que su dato.',
+  },
 ]
 
 const ENTRY_BY_ID = new Map(GLOSSARY.map((e) => [e.id, e]))

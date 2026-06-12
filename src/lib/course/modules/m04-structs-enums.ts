@@ -31,6 +31,11 @@ const module: Module = {
           "prompt": "**Tu reto:** necesitas representar un usuario con un `nombre` (texto) y una `edad` (número). Define un struct `Usuario` con esos dos campos, y escribe `crear(nombre: String, edad: u32) -> Usuario` que construya uno.\n\nInténtalo y dale a Verificar — aunque no conozcas aún la sintaxis de `struct`.",
           "starterCode": "struct Usuario {\n    // ¿qué campos necesita?\n}\n\nfn crear(nombre: String, edad: u32) -> Usuario {\n    // construye y devuelve un Usuario\n}",
           "tests": "fn main() {\n    let u = crear(String::from(\"Ana\"), 30);\n    assert_eq!(u.nombre, \"Ana\");\n    assert_eq!(u.edad, 30);\n    println!(\"__ALL_TESTS_PASSED__\");\n}",
+          "hints": [
+            "Un struct agrupa varios datos bajo un nombre. Se define listando cada campo con su tipo: aquí necesitas un campo de tipo `String` y otro de tipo `u32`, separados por coma.",
+            "La sintaxis es `struct Usuario { nombre: String, edad: u32 }`. Para construir una instancia: `Usuario { nombre: valor, edad: valor }`.",
+            "Dentro de `crear`, la última expresión (sin `;`) es lo que se devuelve. Y como los parámetros se llaman igual que los campos, basta `Usuario { nombre, edad }` — no hace falta repetir `nombre: nombre`."
+          ],
           "solution": "struct Usuario {\n    nombre: String,\n    edad: u32,\n}\n\nfn crear(nombre: String, edad: u32) -> Usuario {\n    Usuario { nombre, edad }\n}",
           "reveal": "Un **struct** agrupa varios datos relacionados bajo un nombre y un tipo propio:\n\n```rust\nstruct Usuario {\n    nombre: String,\n    edad: u32,\n}\n\nfn crear(nombre: String, edad: u32) -> Usuario {\n    Usuario { nombre, edad }\n}\n```\n\nEn vez de andar pasando `nombre` y `edad` sueltos por todos lados, ahora tienes un `Usuario` que los lleva juntos. Cuando los nombres de las variables coinciden con los campos, puedes escribir `Usuario { nombre, edad }` en vez de `Usuario { nombre: nombre, edad: edad }`. Eso es lo que verás ahora en detalle. 👇"
         },
@@ -119,7 +124,8 @@ const module: Module = {
               "text": "Usar la palabra clave `mutable` en la definición del struct",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "En Rust la mutabilidad es una propiedad de la **variable completa** (`let mut`), no de campos individuales: si la instancia es `mut`, puedes modificar cualquier campo; si no, ninguno. No existe mutabilidad por campo ni una palabra clave `mutable` en la definición del struct."
         },
         {
           "type": "quiz",
@@ -141,7 +147,8 @@ const module: Module = {
               "text": "Activa el modo debug del compilador",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "`#[derive(Debug)]` genera automáticamente la implementación del trait `Debug`, que es lo que `{:?}` y `{:#?}` necesitan para formatear el struct al imprimirlo. No afecta al rendimiento ni añade campos: solo código de formateo para depuración."
         },
         {
           "type": "exercise",
@@ -263,7 +270,8 @@ const module: Module = {
               "text": "Los métodos son más rápidos",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "La diferencia está en el primer parámetro: un método recibe `self` (o `&self`, `&mut self`) y opera sobre una instancia concreta; una función asociada no recibe `self` y se llama sobre el tipo, como `Rectangulo::nuevo(...)`. Por eso los constructores son funciones asociadas: cuando los llamas, todavía no existe ninguna instancia."
         },
         {
           "type": "quiz",
@@ -285,7 +293,8 @@ const module: Module = {
               "text": "Con parentesis directos: `Rectangulo(10.0, 5.0)`",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Las funciones asociadas pertenecen al **tipo**, no a una instancia, así que se llaman con `Tipo::funcion(...)`. El operador punto (`rect.area()`) es para métodos, que necesitan una instancia ya existente. La palabra clave `new` como operador es de Java/JavaScript — en Rust `new` es solo un nombre de función por convención."
         },
         {
           "type": "exercise",
@@ -325,6 +334,11 @@ const module: Module = {
           "prompt": "Ya tienes definido un enum `Luz { Roja, Amarilla, Verde }`. **Tu reto:** escribe `segundos(luz: &Luz) -> u32` que devuelva cuántos segundos dura cada luz: `Roja` → 30, `Amarilla` → 5, `Verde` → 25.\n\nIntenta resolverlo y dale a Verificar. Si no conoces `match` todavía, no importa — pelearte con esto hará que la explicación encaje sola.",
           "starterCode": "enum Luz {\n    Roja,\n    Amarilla,\n    Verde,\n}\n\nfn segundos(luz: &Luz) -> u32 {\n    // ¿cómo devuelves un número distinto según la variante?\n    \n}",
           "tests": "fn main() {\n    assert_eq!(segundos(&Luz::Roja), 30);\n    assert_eq!(segundos(&Luz::Amarilla), 5);\n    assert_eq!(segundos(&Luz::Verde), 25);\n    println!(\"__ALL_TESTS_PASSED__\");\n}",
+          "hints": [
+            "Necesitas devolver un número distinto según **cuál variante** del enum recibes. La herramienta de Rust para decidir entre variantes es `match`: compara el valor contra cada posibilidad.",
+            "La sintaxis es `match luz { Luz::Roja => 30, ... }`. Cada rama es `patrón => valor`, separadas por comas, y el `match` entero es una expresión que se devuelve.",
+            "El `match` debe cubrir las tres variantes: `Luz::Roja`, `Luz::Amarilla` y `Luz::Verde`. Si falta una, el compilador rechaza el código — esa exhaustividad es justamente la gracia de `match`."
+          ],
           "solution": "enum Luz {\n    Roja,\n    Amarilla,\n    Verde,\n}\n\nfn segundos(luz: &Luz) -> u32 {\n    match luz {\n        Luz::Roja => 30,\n        Luz::Amarilla => 5,\n        Luz::Verde => 25,\n    }\n}",
           "reveal": "La herramienta para esto es `match`: compara un valor contra cada variante posible y elige una rama.\n\n```rust\nfn segundos(luz: &Luz) -> u32 {\n    match luz {\n        Luz::Roja => 30,\n        Luz::Amarilla => 5,\n        Luz::Verde => 25,\n    }\n}\n```\n\nLo poderoso: `match` es **exhaustivo**. Si te olvidas de una variante (por ejemplo `Verde`), Rust **no compila** y te avisa. Es imposible olvidar un caso por accidente — justo lo contrario a una cadena de `if` donde es fácil dejar un hueco. Eso es lo que veremos en detalle. 👇"
         },
@@ -408,7 +422,8 @@ const module: Module = {
               "text": "Los strings no existen en Rust",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Con un enum, una variante con typo (como `\"pagaddo\"`) ni siquiera compila, y `match` te obliga a manejar **todas** las variantes. Con strings, cualquier valor inválido pasa silenciosamente y el bug aparece en runtime. La ventaja es corrección verificada por el compilador — la velocidad o la memoria son secundarias aquí."
         },
         {
           "type": "quiz",
@@ -430,7 +445,8 @@ const module: Module = {
               "text": "Es lo mismo que un if normal",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "`if let Patron = valor { ... }` es azúcar sintáctica para un `match` donde solo te interesa **una** variante y el resto se ignora. No es un `if` booleano normal: compara el valor contra un patrón y, si encaja, destructura sus datos — igual que una rama de `match`."
         },
         {
           "type": "exercise",
@@ -453,15 +469,15 @@ const module: Module = {
       "moduleId": "m04",
       "moduleSlug": "m04_structs_enums",
       "order": 4,
-      "title": "Option y Result",
+      "title": "Option: la ausencia explícita",
       "blocks": [
         {
           "type": "first-principles",
-          "title": "Option y Result: errores y ausencias como parte del diseño",
-          "problem": "A veces no hay valor. A veces una operación falla. Si fingimos que siempre hay éxito, los errores aparecen tarde y de forma confusa.",
-          "mentalModel": "`Option` dice “puede haber algo o nada”. `Result` dice “puede salir bien o traer un error”. Rust te obliga a mirar ambos caminos.",
-          "concreteExample": "Buscar un usuario por id puede no encontrar nada: eso es `Option`. Leer un archivo puede fallar por permisos o porque no existe: eso es `Result`.",
-          "remember": "Rust no es pesimista; es honesto. Te hace manejar la realidad en el tipo de retorno."
+          "title": "Option: la ausencia de valor como parte del diseño",
+          "problem": "A veces simplemente no hay valor: el usuario no existe, la lista está vacía, la búsqueda no encontró nada. Si fingimos que siempre hay algo, el error aparece tarde y lejos de su causa.",
+          "mentalModel": "`Option` dice “puede haber algo o nada”: `Some(valor)` cuando hay, `None` cuando no. Rust te obliga a mirar ambos caminos antes de usar el valor.",
+          "concreteExample": "Buscar un usuario por id puede no encontrar nada: `buscar(999)` devuelve `None`, y el compilador no te deja usarlo como si fuera un usuario real.",
+          "remember": "Rust no tiene `null`. La ausencia es explícita en el tipo, y el compilador te obliga a manejarla."
         },
         {
           "type": "challenge",
@@ -470,6 +486,10 @@ const module: Module = {
           "prompt": "Dividir entre cero no tiene sentido. **Tu reto:** escribe `dividir(a: f64, b: f64) -> Option<f64>` que devuelva el resultado de `a / b`, pero que represente \"no hay resultado válido\" cuando `b` es 0.\n\nInténtalo y dale a Verificar. Después la idea de `Option`, `Some` y `None` te va a parecer obvia.",
           "starterCode": "fn dividir(a: f64, b: f64) -> Option<f64> {\n    // ¿cómo dices \"sí hay valor\" o \"no hay valor\"?\n    \n}",
           "tests": "fn main() {\n    assert_eq!(dividir(10.0, 2.0), Some(5.0));\n    assert_eq!(dividir(1.0, 0.0), None);\n    assert_eq!(dividir(9.0, 3.0), Some(3.0));\n    println!(\"__ALL_TESTS_PASSED__\");\n}",
+          "hints": [
+            "`Option<f64>` es un enum con dos variantes: `Some(valor)` cuando sí hay resultado y `None` cuando no. Tu función debe devolver una u otra según el caso.",
+            "Usa un `if`: cuando `b == 0.0` devuelve `None`; en el resto de casos devuelve el resultado de la división **envuelto** en `Some(...)` — el valor nunca va \"desnudo\"."
+          ],
           "solution": "fn dividir(a: f64, b: f64) -> Option<f64> {\n    if b == 0.0 {\n        None\n    } else {\n        Some(a / b)\n    }\n}",
           "reveal": "`Option<f64>` es un tipo que dice: *\"aquí puede haber un `f64`... o puede no haber nada\"*. Tiene dos variantes:\n\n- `Some(valor)` → sí hay un valor (envuelto dentro)\n- `None` → no hay valor\n\n```rust\nfn dividir(a: f64, b: f64) -> Option<f64> {\n    if b == 0.0 {\n        None\n    } else {\n        Some(a / b)\n    }\n}\n```\n\nLo importante: quien llame a `dividir` **está obligado por el compilador** a manejar el caso `None`. No puede usar el resultado como si siempre hubiera un número. Así Rust elimina toda una categoría de errores (el famoso *null pointer* de otros lenguajes) desde el diseño. 👇"
         },
@@ -519,6 +539,69 @@ const module: Module = {
           "runnable": true
         },
         {
+          "type": "quiz",
+          "question": "¿Por qué Rust no tiene null?",
+          "options": [
+            {
+              "text": "Porque es un lenguaje nuevo y null ya no se usa",
+              "correct": false
+            },
+            {
+              "text": "Porque Option<T> obliga a manejar la ausencia de valor explícitamente, previniendo NullPointerException",
+              "correct": true
+            },
+            {
+              "text": "Porque Rust no tiene punteros",
+              "correct": false
+            },
+            {
+              "text": "Por razones de rendimiento",
+              "correct": false
+            }
+          ],
+          "explanation": "`Option<T>` hace la ausencia **visible en el tipo**: el compilador te obliga a manejar el caso `None` antes de usar el valor. Con `null`, cualquier referencia puede estar vacía sin que el tipo lo diga, y olvidar comprobarlo causa el clásico `NullPointerException` en runtime. Rust sí tiene punteros y referencias — lo que no tiene es ausencia implícita."
+        },
+        {
+          "type": "quiz",
+          "question": "¿Qué ocurre si llamas `.unwrap()` sobre un valor que es `None`?",
+          "options": [
+            {
+              "text": "Devuelve un valor por defecto del tipo (0, \"\", etc.)",
+              "correct": false
+            },
+            {
+              "text": "El programa se detiene con un panic en tiempo de ejecución",
+              "correct": true
+            },
+            {
+              "text": "Devuelve null",
+              "correct": false
+            },
+            {
+              "text": "No compila: el compilador detecta el None",
+              "correct": false
+            }
+          ],
+          "explanation": "`.unwrap()` significa \"dame el valor o revienta\": sobre `Some(v)` devuelve `v`, pero sobre `None` provoca un **panic** que aborta el programa. El compilador no puede detectarlo porque el contenido del `Option` solo se conoce en runtime — por eso en código real se prefiere `unwrap_or`, `match`, `if let` o `.expect(\"razón\")`."
+        }
+      ]
+    },
+    {
+      "id": "m04_l05",
+      "moduleId": "m04",
+      "moduleSlug": "m04_structs_enums",
+      "order": 5,
+      "title": "Result y el operador ?",
+      "blocks": [
+        {
+          "type": "first-principles",
+          "title": "Result: cuando fallar es una posibilidad real",
+          "problem": "Muchas operaciones pueden fallar por motivos distintos: un archivo que no existe, un texto que no es un número, una red caída. Saber solo que “falló” no basta — necesitas saber por qué para reaccionar bien.",
+          "mentalModel": "`Result` es un sobre con dos caras: `Ok(valor)` si la operación salió bien, `Err(error)` con la causa si salió mal. El error es un dato más que viaja en el tipo de retorno, no una excepción invisible.",
+          "concreteExample": "Parsear `\"42\"` a número da `Ok(42)`. Parsear `\"abc\"` da `Err(...)` explicando que no es un número. Quien llama decide: reintentar, avisar al usuario o propagar el error hacia arriba.",
+          "remember": "`Option` dice si hay valor o no; `Result` además te dice por qué falló. Los errores son valores, y el compilador te obliga a mirarlos."
+        },
+        {
           "type": "text",
           "body": "## Result<T, E>: operaciones que pueden fallar\r\n\r\nMientras `Option` representa \"hay valor o no hay\", `Result` representa \"éxito o error con información\":\r\n\r\n```\r\nenum Result<T, E> {\r\n    Ok(T),     // Operación exitosa, contiene el valor\r\n    Err(E),    // Error, contiene información del error\r\n}\r\n```\r\n\r\n`Result` se usa para operaciones que pueden fallar: leer archivos, parsear números, conexiones de red, etc."
         },
@@ -545,28 +628,6 @@ const module: Module = {
         },
         {
           "type": "quiz",
-          "question": "¿Por qué Rust no tiene null?",
-          "options": [
-            {
-              "text": "Porque es un lenguaje nuevo y null ya no se usa",
-              "correct": false
-            },
-            {
-              "text": "Porque Option<T> obliga a manejar la ausencia de valor explícitamente, previniendo NullPointerException",
-              "correct": true
-            },
-            {
-              "text": "Porque Rust no tiene punteros",
-              "correct": false
-            },
-            {
-              "text": "Por razones de rendimiento",
-              "correct": false
-            }
-          ]
-        },
-        {
-          "type": "quiz",
           "question": "Qué hace el operador `?` en una función ¿qué devuelve Result?",
           "options": [
             {
@@ -585,7 +646,31 @@ const module: Module = {
               "text": "Imprime el error en la consola",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "`?` desenvuelve el `Ok(valor)` y deja seguir la ejecución, pero si encuentra un `Err(e)` hace `return Err(e)` inmediatamente desde la función actual. Es azúcar sintáctica para el `match` de propagación de errores: no los ignora ni los imprime, los **propaga** al caller."
+        },
+        {
+          "type": "quiz",
+          "question": "Quieres parsear un string a número y, si falla, saber por qué falló. ¿Qué tipo de retorno es el adecuado?",
+          "options": [
+            {
+              "text": "`Option<u32>`: con `None` basta",
+              "correct": false
+            },
+            {
+              "text": "`Result<u32, E>`: el `Err(E)` lleva la información de por qué falló",
+              "correct": true
+            },
+            {
+              "text": "`u32` usando 0 como valor centinela de error",
+              "correct": false
+            },
+            {
+              "text": "`bool` indicando si funcionó",
+              "correct": false
+            }
+          ],
+          "explanation": "`Result` existe exactamente para esto: `Err(E)` transporta **la causa** del fallo (texto vacío, caracteres inválidos, fuera de rango...). `Option` solo dice \"no hay valor\" sin explicar por qué — útil cuando la ausencia es normal, no un error. Los valores centinela (0, -1) son el anti-patrón que `Option` y `Result` vinieron a eliminar."
         },
         {
           "type": "exercise",

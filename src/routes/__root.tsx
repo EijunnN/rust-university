@@ -32,12 +32,17 @@ export const Route = createRootRouteWithContext<{
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+      {
+        name: 'viewport',
+        // viewport-fit=cover habilita env(safe-area-inset-*) en iOS, que usa
+        // el FAB del playground para no quedar bajo la barra del sistema.
+        content: 'width=device-width, initial-scale=1, viewport-fit=cover',
+      },
       { title: 'Fundamentos de Rust — Universidad de Rust' },
       {
         name: 'description',
         content:
-          'Curso de Fundamentos de Rust en español: variables, ownership, tipos, colecciones e iteradores. Aprendido a fondo, no a medias.',
+          'Curso de Fundamentos de Rust en español: variables, ownership, colecciones, iteradores, traits, errores y testing. Aprendido a fondo, no a medias.',
       },
     ],
     links: [

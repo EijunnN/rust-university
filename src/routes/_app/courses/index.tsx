@@ -40,7 +40,7 @@ function CoursesPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {moduleMeta.map((m) => {
           const moduleCompleted = m.lessons.filter((l) => completed.has(l.id))
           const allDone = moduleCompleted.length === m.lessonCount

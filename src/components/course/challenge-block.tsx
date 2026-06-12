@@ -12,24 +12,32 @@ import { api } from '../../../convex/_generated/api'
 
 // Productive-failure block. The learner faces the problem BEFORE the theory,
 // attempts it (and usually fails — that's the point), then unlocks the
-// explanation, which now lands much deeper.
+// explanation, which now lands much deeper. Progressive hints keep the
+// struggle productive instead of frustrating.
 export function ChallengeBlock({
   block,
   promptHast,
   revealHast,
+  hintsHast,
   starterHtml,
   solutionHtml,
+  persistKey,
 }: {
   block: ChallengeBlockType
   promptHast: Root
   revealHast: Root
+  hintsHast?: Root[]
   starterHtml: string
   solutionHtml: string
+  persistKey?: string
 }) {
   const [attempts, setAttempts] = useState(0)
   const [passed, setPassed] = useState(false)
   const [revealed, setRevealed] = useState(false)
+  const [hintsShown, setHintsShown] = useState(0)
   const recorded = useRef(false)
+
+  const totalHints = hintsHast?.length ?? 0
 
   const recordPractice = useMutation({
     mutationFn: useConvexMutation(api.mastery.recordPractice),
@@ -46,8 +54,9 @@ export function ChallengeBlock({
     setAttempts(n)
     if (result.passed && !passed) {
       setPassed(true)
-      // Solving it BEFORE revealing earns full marks; after, partial.
-      record(revealed ? 3 : n === 1 ? 5 : 4)
+      // Solving it BEFORE revealing earns full marks; with hints or after
+      // revealing, partial — the SM-2 scheduler brings it back sooner.
+      record(revealed ? 3 : n === 1 && hintsShown === 0 ? 5 : 4)
     }
   }
 
@@ -69,6 +78,11 @@ export function ChallengeBlock({
           </div>
           <div className="text-sm font-semibold truncate">{block.title}</div>
         </div>
+        {attempts > 0 && !passed && (
+          <div className="text-[10px] text-muted-foreground tabular-nums flex-shrink-0">
+            intento {attempts}
+          </div>
+        )}
       </div>
 
       <div className="p-5 sm:p-6 space-y-4">
@@ -91,7 +105,38 @@ export function ChallengeBlock({
           staticHtml={starterHtml}
           tests={block.tests}
           onVerified={handleVerified}
+          persistKey={persistKey}
         />
+
+        {/* Pistas progresivas: aparecen tras el primer intento fallido. */}
+        {totalHints > 0 && !passed && !revealed && attempts > 0 && (
+          <div className="space-y-2">
+            {Array.from({ length: hintsShown }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-lg border border-warning/30 bg-warning/5 p-3 flex gap-2 text-sm"
+              >
+                <Lightbulb className="h-4 w-4 mt-0.5 flex-shrink-0 text-warning" />
+                <MarkdownContent
+                  hast={hintsHast![i]!}
+                  className="prose prose-sm dark:prose-invert max-w-none flex-1 [&>p:first-child]:mt-0 [&>p:last-child]:mb-0"
+                />
+              </div>
+            ))}
+            {hintsShown < totalHints && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setHintsShown((h) => h + 1)}
+              >
+                <Lightbulb className="mr-2 h-3.5 w-3.5" />
+                {hintsShown === 0
+                  ? '¿Atascado? Pide una pista'
+                  : `Otra pista (${hintsShown + 1} de ${totalHints})`}
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Reveal gate */}
         {!revealed ? (

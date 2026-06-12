@@ -57,6 +57,7 @@ type RenderedExercise = ExerciseBlockType & {
 type RenderedChallenge = ChallengeBlockType & {
   promptHast: HastRoot
   revealHast: HastRoot
+  hintsHast?: HastRoot[]
   starterHtml: string
   solutionHtml: string
 }
@@ -73,7 +74,7 @@ type RenderedBlock =
   | (CodeBlockType & { html: string })
   | (CalloutBlockType & { hast: HastRoot })
   | FPBlock
-  | (QuizBlockType & { quizIndex: number })
+  | (QuizBlockType & { quizIndex: number; explanationHast?: HastRoot })
   | RenderedExercise
   | RenderedChallenge
   | RenderedFaded
@@ -109,7 +110,13 @@ export const Route = createFileRoute(
           case 'first-principles':
             return b
           case 'quiz':
-            return { ...b, quizIndex: quizCounter++ }
+            return {
+              ...b,
+              quizIndex: quizCounter++,
+              explanationHast: b.explanation
+                ? await renderMarkdownToHast(b.explanation)
+                : undefined,
+            }
           case 'exercise': {
             const [promptHast, starterHtml, solutionHtml, explanationHast] =
               await Promise.all([
@@ -140,7 +147,17 @@ export const Route = createFileRoute(
                 renderCodeBlock(b.starterCode, 'rust'),
                 renderCodeBlock(b.solution, 'rust'),
               ])
-            return { ...b, promptHast, revealHast, starterHtml, solutionHtml }
+            const hintsHast = b.hints
+              ? await Promise.all(b.hints.map((h) => renderMarkdownToHast(h)))
+              : undefined
+            return {
+              ...b,
+              promptHast,
+              revealHast,
+              hintsHast,
+              starterHtml,
+              solutionHtml,
+            }
           }
           case 'faded-exercise': {
             const [introHast, stageInstructionsHast, stageCodeHtml, solutionHtml] =
@@ -318,7 +335,7 @@ function LessonPage() {
               Lecciones del módulo
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-80 p-0">
+          <SheetContent side="left" className="w-[85vw] max-w-80 p-0">
             <LessonSidebar
               meta={meta}
               currentLessonId={lesson.id}
@@ -368,6 +385,7 @@ function LessonPage() {
                       key={i}
                       initialCode={b.code}
                       staticHtml={b.html}
+                      testMode={b.testMode}
                     />
                   )
                 }
@@ -389,6 +407,7 @@ function LessonPage() {
                     block={b}
                     quizIndex={b.quizIndex}
                     alreadyAnsweredCorrectly={alreadyCompleted}
+                    explanationHast={b.explanationHast}
                     onAttempt={(a) => setAttempts((prev) => [...prev, a])}
                   />
                 )
@@ -402,6 +421,7 @@ function LessonPage() {
                     solutionHtml={b.solutionHtml}
                     explanationHast={b.explanationHast}
                     hintsHast={b.hintsHast}
+                    persistKey={`${lesson.id}-ex${i}`}
                   />
                 )
               case 'challenge':
@@ -411,8 +431,10 @@ function LessonPage() {
                     block={b}
                     promptHast={b.promptHast}
                     revealHast={b.revealHast}
+                    hintsHast={b.hintsHast}
                     starterHtml={b.starterHtml}
                     solutionHtml={b.solutionHtml}
+                    persistKey={`${lesson.id}-ch${i}`}
                   />
                 )
               case 'faded-exercise':
@@ -424,6 +446,7 @@ function LessonPage() {
                     stageInstructionsHast={b.stageInstructionsHast}
                     stageCodeHtml={b.stageCodeHtml}
                     solutionHtml={b.solutionHtml}
+                    persistKey={`${lesson.id}-fd${i}`}
                   />
                 )
             }
@@ -492,7 +515,7 @@ function LessonPage() {
                 {completeMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : totalQuizzes > 0 && !allQuizzesPassed ? (
-                  `Responde los ${totalQuizzes} quizzes`
+                  `Quizzes: ${correctQuizSet.size}/${totalQuizzes} — responde los que faltan`
                 ) : (
                   <>
                     <Check className="mr-2 h-4 w-4" />

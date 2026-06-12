@@ -25,13 +25,13 @@ function Landing() {
             </h1>
             <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl">
               Los cimientos sólidos del lenguaje, sin atajos. Variables,
-              ownership, tipos, colecciones e iteradores — explicados desde el
-              porqué, no desde la sintaxis.
+              ownership, colecciones, iteradores, traits, manejo de errores y
+              testing — explicados desde el porqué, no desde la sintaxis.
             </p>
             <p className="mt-3 text-sm text-muted-foreground max-w-2xl">
-              Después de este curso vendrán: Cargo &amp; Módulos · Traits &amp;
-              Generics · Errores &amp; Testing · I/O · Async · Performance. Aún
-              en preparación — preferimos retrasar antes que enseñar a medias.
+              Después de este curso vendrán: Cargo y proyecto integrador ·
+              Smart pointers · Concurrencia · Async. Aún en preparación —
+              preferimos retrasar antes que enseñar a medias.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <Button asChild size="lg" className="text-base">

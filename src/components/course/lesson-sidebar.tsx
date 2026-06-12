@@ -95,6 +95,7 @@ export function LessonSidebar({
               to="/courses/$moduleSlug/lesson/$lessonId"
               params={{ moduleSlug: meta.slug, lessonId: l.id }}
               onClick={onNavigate}
+              aria-current={isCurrent ? 'page' : undefined}
             >
               {content}
             </Link>

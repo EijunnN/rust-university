@@ -1,4 +1,27 @@
-Welcome to your new TanStack Start app! 
+# Universidad de Rust
+
+Plataforma de aprendizaje interactivo de Rust en español: lecciones con
+pedagogía de *productive failure* (reto antes de la teoría), ejercicios
+auto-verificados contra el Rust Playground, repaso espaciado (SM-2) por
+concepto, y gamificación.
+
+## Verificación del contenido del curso
+
+**Antes de publicar cualquier cambio en los módulos** (`src/lib/course/modules/`)
+o en `concepts.ts`, ejecuta:
+
+```bash
+bun run scripts/verify-course.ts          # todo el curso + concepts
+bun run scripts/verify-course.ts m03 m06  # solo módulos específicos
+```
+
+El script ejecuta TODO el código Rust del curso contra play.rust-lang.org:
+ejemplos `runnable`, soluciones de challenges/faded/exercises (contra sus
+propios tests) y los reviews de conceptos. Un ejercicio roto destruye la
+confianza del alumno — este script existe para que eso nunca llegue a main.
+
+El roadmap de módulos pendientes (m07-m12) está documentado en
+`src/lib/course/meta.ts`.
 
 # Getting Started
 

@@ -16,8 +16,11 @@ const moduleLoaders: Record<string, ModuleLoader> = {
   m03_ownership: () => import('./modules/m03-ownership'),
   m04_structs_enums: () => import('./modules/m04-structs-enums'),
   m05_collections_errors: () => import('./modules/m05-collections-errors'),
-  // m06-m12 archived: drafts pending re-write. To re-enable: add loader here
-  // and append the module to `moduleMeta` in meta.ts.
+  m06_traits_generics: () => import('./modules/m06-traits-generics'),
+  m07_errors_testing: () => import('./modules/m07-errors-testing'),
+  // Borradores archivados (m06-under-the-hood, m07-m12): pendientes de
+  // reescritura en profundidad. Para activar uno: loader aquí + entrada en
+  // `moduleMeta` (meta.ts). El roadmap vive en el comentario de meta.ts.
 }
 
 export async function loadModule(slug: string): Promise<Module | null> {

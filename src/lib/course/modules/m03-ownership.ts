@@ -31,6 +31,10 @@ const module: Module = {
           "prompt": "**Tu reto:** escribe `longitud_propia(s: String) -> usize` que reciba un `String` **por valor** (no por referencia) y devuelva su longitud en bytes.\n\nFíjate que el parámetro es `String`, no `&String`. Inténtalo y dale a Verificar — luego hablaremos de qué significa que la función \"se quede\" con el dato.",
           "starterCode": "fn longitud_propia(s: String) -> usize {\n    // tu código aquí\n}",
           "tests": "fn main() {\n    assert_eq!(longitud_propia(String::from(\"hola\")), 4);\n    assert_eq!(longitud_propia(String::from(\"\")), 0);\n    println!(\"__ALL_TESTS_PASSED__\");\n}",
+          "hints": [
+            "`s.len()` devuelve la longitud en bytes de un `String`. No necesitas nada más que llamarlo.",
+            "Recuerda (m02): la última expresión **sin punto y coma** es el valor de retorno. El cuerpo completo es una sola línea: `s.len()`."
+          ],
           "solution": "fn longitud_propia(s: String) -> usize {\n    s.len()\n}",
           "reveal": "Cuando una función recibe un `String` **por valor**, se vuelve su **dueña** (owner). El dato \"se mueve\" hacia adentro de la función.\n\n```rust\nfn longitud_propia(s: String) -> usize {\n    s.len()\n}  // aquí s sale de scope y Rust libera su memoria, automáticamente\n```\n\nLa consecuencia importante: quien llamó a la función **ya no puede usar su `String`** después, porque dejó de ser el dueño. Cada dato tiene exactamente un dueño en cada momento — esa es la regla central de *ownership* que vas a ver ahora. 👇"
         },
@@ -102,7 +106,8 @@ const module: Module = {
               "text": "Al final del programa",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Rust inserta la liberación (`drop`) en el punto exacto donde el owner sale de su scope — y lo decide al **compilar**. No hay garbage collector vigilando en runtime ni `free()` manual: por eso no hay pausas ni fugas."
         },
         {
           "type": "quiz",
@@ -124,7 +129,8 @@ const module: Module = {
               "text": "Depende del tipo de dato",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Regla 2 del ownership: **exactamente un** owner a la vez, para cualquier tipo. Si dos variables fueran dueñas del mismo dato del heap, ambas intentarían liberarlo al salir de scope — un *double free*. El move existe justamente para impedirlo."
         }
       ]
     },
@@ -150,6 +156,10 @@ const module: Module = {
           "prompt": "**Tu reto:** escribe `agregar(s: String) -> String` que reciba un `String`, le añada un `!` al final, y lo devuelva.\n\nPista: para poder modificarlo el parámetro debe ser `mut s: String`, y `s.push('!')` agrega un carácter. Inténtalo y dale a Verificar.",
           "starterCode": "fn agregar(mut s: String) -> String {\n    // modifica s y devuélvelo\n    \n}",
           "tests": "fn main() {\n    assert_eq!(agregar(String::from(\"hola\")), \"hola!\");\n    assert_eq!(agregar(String::from(\"\")), \"!\");\n    println!(\"__ALL_TESTS_PASSED__\");\n}",
+          "hints": [
+            "Son dos pasos separados: primero muta `s` con `s.push('!')` (línea con `;`), después devuélvela.",
+            "Para devolver `s`, escríbela sola en la última línea, **sin** punto y coma. Eso mueve el ownership de vuelta a quien llamó."
+          ],
           "solution": "fn agregar(mut s: String) -> String {\n    s.push('!');\n    s\n}",
           "reveal": "Aquí el `String` **se mueve** hacia la función (que se vuelve su dueña), se modifica, y luego se mueve **de vuelta** al devolverlo:\n\n```rust\nfn agregar(mut s: String) -> String {\n    s.push('!');\n    s   // devolvemos el ownership a quien llamó\n}\n```\n\nEste patrón de \"toma posesión y devuélvela\" era la única forma de compartir datos antes de aprender *referencias*. Es seguro pero incómodo — por eso en la próxima lección verás cómo *prestar* un dato sin moverlo. 👇"
         },
@@ -222,7 +232,8 @@ const module: Module = {
               "text": "Error de compilación",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Como `String` posee memoria en el heap y no es `Copy`, la asignación **transfiere** el ownership: `s2` es el nuevo dueño y `s1` queda inválida. Ojo: la línea compila perfectamente — el error solo aparece si intentas *usar* `s1` después."
         },
         {
           "type": "quiz",
@@ -244,7 +255,8 @@ const module: Module = {
               "text": "Es solo una preferencia de diseño sin razón técnica",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Si ambas variables apuntaran al mismo bloque del heap, al salir de scope **cada una** intentaría liberarlo: double free, crashes, corrupción de memoria. El move garantiza un único responsable de la liberación. (Copiar de verdad también sería posible — pero costoso, y por eso Rust lo exige explícito con `.clone()`.)"
         },
         {
           "type": "exercise",
@@ -284,6 +296,10 @@ const module: Module = {
           "prompt": "**Tu reto:** escribe `dos_copias(s: &str) -> (String, String)` que devuelva **dos copias independientes** del texto recibido.\n\nPista: `s.to_string()` crea un `String` nuevo a partir de un `&str`. Inténtalo y dale a Verificar.",
           "starterCode": "fn dos_copias(s: &str) -> (String, String) {\n    // crea dos String independientes\n    \n}",
           "tests": "fn main() {\n    assert_eq!(dos_copias(\"hi\"), (String::from(\"hi\"), String::from(\"hi\")));\n    assert_eq!(dos_copias(\"rust\"), (String::from(\"rust\"), String::from(\"rust\")));\n    println!(\"__ALL_TESTS_PASSED__\");\n}",
+          "hints": [
+            "Una tupla se construye con paréntesis: `(a, b)`. Necesitas que ambos elementos sean `String` nuevos e independientes.",
+            "`s.to_string()` crea un `String` nuevo a partir del `&str`. Llamarlo dos veces crea dos copias independientes — exactamente lo que piden."
+          ],
           "solution": "fn dos_copias(s: &str) -> (String, String) {\n    (s.to_string(), s.to_string())\n}",
           "reveal": "Para tener **dos datos independientes** (cada uno con su propio dueño y su propia memoria) necesitas **copiarlos** explícitamente. `to_string()` (o `.clone()`) hace exactamente eso:\n\n```rust\nfn dos_copias(s: &str) -> (String, String) {\n    (s.to_string(), s.to_string())\n}\n```\n\nRust te obliga a ser explícito al copiar porque copiar puede costar memoria y tiempo. Tipos pequeños como `i32` se copian solos (son `Copy`); tipos con memoria propia como `String` requieren un `.clone()` deliberado. Eso es lo que verás ahora. 👇"
         },
@@ -386,7 +402,8 @@ const module: Module = {
               "text": "Clone es más rápido que Copy",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "`Copy` es implícito y barato: pocos bytes del stack que se duplican solos. `Clone` es explícito porque puede costar: reserva memoria nueva en el heap y copia todo el contenido. Rust te hace escribir `.clone()` para que ese costo quede visible en el código."
         },
         {
           "type": "quiz",
@@ -408,7 +425,8 @@ const module: Module = {
               "text": "La función recibe una referencia automáticamente",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Pasar un argumento sigue exactamente las mismas reglas que `let`: los tipos no-Copy se **mueven**. La función se vuelve dueña y, al terminar, libera el valor. Nada ocurre \"automáticamente\": para prestar sin mover necesitas escribir `&` — eso viene en la próxima lección."
         },
         {
           "type": "exercise",
@@ -571,7 +589,8 @@ const module: Module = {
               "text": "Depende del tamaño del dato",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Leer en paralelo es seguro porque nadie modifica. Lo prohibido es mezclar lectores con un escritor (`&mut`), porque un lector podría ver el dato a medio cambiar. De ahí la regla: muchos `&` **o** un solo `&mut`, nunca ambos."
         },
         {
           "type": "quiz",
@@ -593,7 +612,8 @@ const module: Module = {
               "text": "Porque las referencias mutables son más lentas",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Es la prevención de **data races** en compilación: si alguien escribe mientras otro lee, el lector puede observar un estado intermedio inválido. Rust no \"detecta\" ese bug en ejecución — directamente no permite que la combinación exista."
         },
         {
           "type": "exercise",
@@ -633,6 +653,11 @@ const module: Module = {
           "prompt": "Reto clásico de Rust: escribe `primera_palabra(s: &str) -> &str` que devuelva la **primera palabra** de un texto (todo lo que hay antes del primer espacio). Si no hay espacios, devuelve el texto completo.\n\n**Inténtalo aunque no sepas cómo cortar un texto todavía** — dale a Verificar. La explicación de los *slices* va a tener mucho más sentido después de pelearte con esto.",
           "starterCode": "fn primera_palabra(s: &str) -> &str {\n    // ¿cómo devuelves solo la parte hasta el primer espacio?\n    \n}",
           "tests": "fn main() {\n    assert_eq!(primera_palabra(\"hola mundo\"), \"hola\");\n    assert_eq!(primera_palabra(\"rust\"), \"rust\");\n    assert_eq!(primera_palabra(\"uno dos tres\"), \"uno\");\n    println!(\"__ALL_TESTS_PASSED__\");\n}",
+          "hints": [
+            "Necesitas la **posición** del primer espacio. La forma más directa: `s.find(' ')` devuelve `Option<usize>` con ese índice.",
+            "Una porción de un texto se escribe `&s[..i]` — desde el inicio hasta `i`, sin incluirlo. Y si no hay espacio, devuelve `s` completo.",
+            "Estructura: `match s.find(' ')` con dos brazos — `Some(i) => &s[..i]` y `None => s`."
+          ],
           "solution": "fn primera_palabra(s: &str) -> &str {\n    let bytes = s.as_bytes();\n    for (i, &b) in bytes.iter().enumerate() {\n        if b == b' ' {\n            return &s[..i];\n        }\n    }\n    s\n}",
           "reveal": "La clave es **no copiar nada**: en vez de construir un texto nuevo, devuelves un *slice* — una ventana al texto original.\n\nUn slice se escribe `&s[inicio..fin]`. Por ejemplo `&s[0..4]` es \"los bytes del 0 al 3\". Su tipo es `&str`.\n\nLa solución recorre el texto buscando el primer espacio y devuelve la porción anterior:\n\n```rust\nfn primera_palabra(s: &str) -> &str {\n    let bytes = s.as_bytes();\n    for (i, &b) in bytes.iter().enumerate() {\n        if b == b' ' {\n            return &s[..i];   // slice: del inicio hasta el espacio\n        }\n    }\n    s  // sin espacios: el texto entero\n}\n```\n\nComo el slice apunta al texto original, Rust se asegura (vía borrowing) de que ese texto siga vivo mientras uses el slice. Eso es justo lo que verás a continuación. 👇"
         },
@@ -716,11 +741,12 @@ const module: Module = {
               "text": "El slice usa menos memoria",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Un `usize` suelto se desincroniza: si el `String` cambia (`s.clear()`), el número queda apuntando a una posición sin sentido y **nadie te avisa**. El slice es una referencia: el borrow checker \"congela\" el `String` mientras el slice viva, y el bug se vuelve imposible."
         },
         {
           "type": "quiz",
-          "question": "¿Por qué es mejor ¿qué una función reciba `&str` en lugar de `&String`?",
+          "question": "¿Por qué es mejor que una función reciba `&str` en lugar de `&String`?",
           "options": [
             {
               "text": "Porque &str es más rápido",
@@ -738,7 +764,8 @@ const module: Module = {
               "text": "No hay diferencia real",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "`&str` es la vista más general: un `&String` se convierte gratis en `&str` (deref coercion), y además aceptas string literals y sub-slices. `&String` solo acepta referencias a `String` completos. Por eso las APIs idiomáticas de Rust reciben `&str`."
         },
         {
           "type": "exercise",
@@ -778,6 +805,10 @@ const module: Module = {
           "prompt": "**Tu reto:** escribe una función que reciba dos textos prestados (`&str`) y devuelva una referencia al **más largo** (por número de bytes). Si empatan, devuelve el primero.\n\nLa firma ya trae unas anotaciones raras (`'a`). Inténtalo y dale a Verificar — luego entenderás por qué Rust las pide.",
           "starterCode": "fn mas_largo<'a>(a: &'a str, b: &'a str) -> &'a str {\n    // devuelve el más largo\n    \n}",
           "tests": "fn main() {\n    assert_eq!(mas_largo(\"hola\", \"hi\"), \"hola\");\n    assert_eq!(mas_largo(\"a\", \"bbb\"), \"bbb\");\n    assert_eq!(mas_largo(\"igual\", \"xxxxx\"), \"igual\");\n    println!(\"__ALL_TESTS_PASSED__\");\n}",
+          "hints": [
+            "Compara longitudes con `a.len() >= b.len()`. El `>=` hace que en empate gane el primero, como pide el enunciado.",
+            "En Rust, `if/else` es una **expresión**: `if cond { a } else { b }` devuelve directamente `a` o `b`. Sin `return`, sin `;`."
+          ],
           "solution": "fn mas_largo<'a>(a: &'a str, b: &'a str) -> &'a str {\n    if a.len() >= b.len() {\n        a\n    } else {\n        b\n    }\n}",
           "reveal": "Esas anotaciones `'a` son **lifetimes** (tiempos de vida). Cuando una función devuelve una referencia que pudo venir de cualquiera de dos entradas, Rust necesita saber: *¿cuánto tiempo será válido el resultado?*\n\n```rust\nfn mas_largo<'a>(a: &'a str, b: &'a str) -> &'a str {\n    if a.len() >= b.len() { a } else { b }\n}\n```\n\n`'a` le promete a Rust: *\"el resultado vivirá tanto como la más corta de las dos entradas\"*. No cambia el comportamiento en ejecución — es solo una etiqueta que el compilador usa para garantizar que nunca devuelvas una referencia a un dato ya liberado. Eso es lo que verás ahora. 👇"
         },
@@ -859,7 +890,8 @@ const module: Module = {
               "text": "Una referencia que apunta a un valor en el stack",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "\"Colgante\" significa que el dato al que apuntaba **ya fue liberado**. Usarla en C/C++ es comportamiento indefinido: crashes y vulnerabilidades. En Rust ni siquiera compila — el borrow checker exige que toda referencia viva menos que su dato."
         },
         {
           "type": "quiz",
@@ -881,7 +913,8 @@ const module: Module = {
               "text": "Nunca, Rust siempre los infiere",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Con **varias** referencias de entrada y una de salida, el compilador no puede adivinar de cuál depende el resultado: las reglas de elision no aplican y anotas tú. Con un solo parámetro de referencia (o con `&self`), la elision lo resuelve sola — por eso la mayoría de funciones no llevan `'a`."
         },
         {
           "type": "exercise",

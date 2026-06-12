@@ -602,6 +602,370 @@ fn palabras_distintas(texto: &str) -> usize {
 }`,
     },
   },
+  {
+    id: 'm06-generic-fn',
+    moduleId: 'm06',
+    name: 'Funciones genéricas',
+    summary: 'Escribir una función con parámetro de tipo y bound.',
+    review: {
+      prompt:
+        'Escribe `mayor<T: PartialOrd>(a: T, b: T) -> T` que devuelva el mayor de los dos valores (en empate, el primero). Una sola función genérica — nada de copias por tipo.',
+      starterCode: `fn mayor<T: PartialOrd>(a: T, b: T) -> T {
+    // Tu código aquí
+}`,
+      tests: `fn main() {
+    assert_eq!(mayor(8, 3), 8);
+    assert_eq!(mayor('a', 'z'), 'z');
+    assert_eq!(mayor(2.5, 2.5), 2.5);
+    ${PASS}
+}`,
+      solution: `fn mayor<T: PartialOrd>(a: T, b: T) -> T {
+    if a >= b { a } else { b }
+}`,
+    },
+  },
+  {
+    id: 'm06-trait-impl',
+    moduleId: 'm06',
+    name: 'Implementar un trait',
+    summary: 'Cumplir el contrato de un trait para un tipo propio.',
+    review: {
+      prompt:
+        'Te damos el trait `Describible` y el struct `Libro`. Implementa el trait para que `describir()` devuelva `"{titulo} ({paginas} págs.)"` — por ejemplo `"Rust (300 págs.)"`.',
+      starterCode: `trait Describible {
+    fn describir(&self) -> String;
+}
+
+struct Libro {
+    titulo: String,
+    paginas: u32,
+}
+
+impl Describible for Libro {
+    // Tu código aquí
+}`,
+      tests: `fn main() {
+    let l = Libro { titulo: String::from("Rust"), paginas: 300 };
+    assert_eq!(l.describir(), "Rust (300 págs.)");
+    ${PASS}
+}`,
+      solution: `trait Describible {
+    fn describir(&self) -> String;
+}
+
+struct Libro {
+    titulo: String,
+    paginas: u32,
+}
+
+impl Describible for Libro {
+    fn describir(&self) -> String {
+        format!("{} ({} págs.)", self.titulo, self.paginas)
+    }
+}`,
+    },
+  },
+  {
+    id: 'm06-fn-bound',
+    moduleId: 'm06',
+    name: 'Genéricos sobre funciones',
+    summary: 'Recibir un closure vía parámetro genérico con bound Fn.',
+    review: {
+      prompt:
+        'Escribe `transformar_todos<F: Fn(i32) -> i32>(items: &[i32], f: F) -> Vec<i32>` que devuelva un Vec con `f` aplicada a cada elemento. Iteradores de m05: `iter`, `map`, `collect`.',
+      starterCode: `fn transformar_todos<F: Fn(i32) -> i32>(items: &[i32], f: F) -> Vec<i32> {
+    // Tu código aquí
+}`,
+      tests: `fn main() {
+    assert_eq!(transformar_todos(&[1, 2, 3], |n| n * 10), vec![10, 20, 30]);
+    assert_eq!(transformar_todos(&[], |n| n + 1), Vec::<i32>::new());
+    ${PASS}
+}`,
+      solution: `fn transformar_todos<F: Fn(i32) -> i32>(items: &[i32], f: F) -> Vec<i32> {
+    items.iter().map(|&n| f(n)).collect()
+}`,
+    },
+  },
+  {
+    id: 'm06-bound-contains',
+    moduleId: 'm06',
+    name: 'Bounds: PartialEq',
+    summary: 'Elegir el bound correcto para poder comparar con ==.',
+    review: {
+      prompt:
+        'Escribe `contiene<T: PartialEq>(items: &[T], objetivo: &T) -> bool` que diga si `objetivo` está en el slice. Recuerda qué capacidad desbloquea el bound `PartialEq`.',
+      starterCode: `fn contiene<T: PartialEq>(items: &[T], objetivo: &T) -> bool {
+    // Tu código aquí
+}`,
+      tests: `fn main() {
+    assert!(contiene(&[1, 2, 3], &2));
+    assert!(!contiene(&[1, 2, 3], &9));
+    assert!(contiene(&["a", "b"], &"b"));
+    ${PASS}
+}`,
+      solution: `fn contiene<T: PartialEq>(items: &[T], objetivo: &T) -> bool {
+    for item in items {
+        if item == objetivo {
+            return true;
+        }
+    }
+    false
+}`,
+    },
+  },
+  {
+    id: 'm06-display',
+    moduleId: 'm06',
+    name: 'Implementar Display',
+    summary: 'Darle a un tipo propio el formato "para humanos" del ecosistema.',
+    review: {
+      prompt:
+        'Implementa `Display` para `Temperatura` con el formato `23.5°C`. Recuerda: el cuerpo de `fmt` es un `write!(f, …)` sin punto y coma.',
+      starterCode: `use std::fmt;
+
+struct Temperatura {
+    celsius: f64,
+}
+
+impl fmt::Display for Temperatura {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Tu código aquí
+    }
+}`,
+      tests: `fn main() {
+    assert_eq!(format!("{}", Temperatura { celsius: 23.5 }), "23.5°C");
+    assert_eq!(format!("{}", Temperatura { celsius: -5.0 }), "-5°C");
+    ${PASS}
+}`,
+      solution: `use std::fmt;
+
+struct Temperatura {
+    celsius: f64,
+}
+
+impl fmt::Display for Temperatura {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}°C", self.celsius)
+    }
+}`,
+    },
+  },
+  {
+    id: 'm06-dyn-collection',
+    moduleId: 'm06',
+    name: 'dyn Trait: colecciones mixtas',
+    summary: 'Operar sobre una lista de tipos distintos detrás de Box<dyn Trait>.',
+    review: {
+      prompt:
+        'Te damos el trait `Figura` y dos implementaciones. Escribe `area_total(figuras: &[Box<dyn Figura>]) -> f64` que sume las áreas de todas las figuras de la lista mixta.',
+      starterCode: `trait Figura {
+    fn area(&self) -> f64;
+}
+
+struct Cuadrado { lado: f64 }
+struct Triangulo { base: f64, altura: f64 }
+
+impl Figura for Cuadrado {
+    fn area(&self) -> f64 { self.lado * self.lado }
+}
+
+impl Figura for Triangulo {
+    fn area(&self) -> f64 { self.base * self.altura / 2.0 }
+}
+
+fn area_total(figuras: &[Box<dyn Figura>]) -> f64 {
+    // Tu código aquí
+}`,
+      tests: `fn main() {
+    let figuras: Vec<Box<dyn Figura>> = vec![
+        Box::new(Cuadrado { lado: 2.0 }),
+        Box::new(Triangulo { base: 3.0, altura: 4.0 }),
+    ];
+    assert!((area_total(&figuras) - 10.0).abs() < 1e-9);
+    assert_eq!(area_total(&[]), 0.0);
+    ${PASS}
+}`,
+      solution: `trait Figura {
+    fn area(&self) -> f64;
+}
+
+struct Cuadrado { lado: f64 }
+struct Triangulo { base: f64, altura: f64 }
+
+impl Figura for Cuadrado {
+    fn area(&self) -> f64 { self.lado * self.lado }
+}
+
+impl Figura for Triangulo {
+    fn area(&self) -> f64 { self.base * self.altura / 2.0 }
+}
+
+fn area_total(figuras: &[Box<dyn Figura>]) -> f64 {
+    figuras.iter().map(|f| f.area()).sum()
+}`,
+    },
+  },
+  {
+    id: 'm07-result-divide',
+    moduleId: 'm07',
+    name: 'Errores como datos',
+    summary: 'Devolver Result en vez de panickear ante errores esperables.',
+    review: {
+      prompt:
+        'Escribe `dividir(a: f64, b: f64) -> Result<f64, String>`: si `b` es `0.0` devuelve `Err` con el mensaje exacto `"no se puede dividir entre cero"`; si no, `Ok(a / b)`.',
+      starterCode: `fn dividir(a: f64, b: f64) -> Result<f64, String> {
+    // Tu código aquí
+}`,
+      tests: `fn main() {
+    assert_eq!(dividir(10.0, 2.0), Ok(5.0));
+    assert_eq!(dividir(7.0, 0.0), Err(String::from("no se puede dividir entre cero")));
+    ${PASS}
+}`,
+      solution: `fn dividir(a: f64, b: f64) -> Result<f64, String> {
+    if b == 0.0 {
+        Err(String::from("no se puede dividir entre cero"))
+    } else {
+        Ok(a / b)
+    }
+}`,
+    },
+  },
+  {
+    id: 'm07-error-enum',
+    moduleId: 'm07',
+    name: 'Enums de error',
+    summary: 'Modelar los modos de fallo como variantes tipadas.',
+    review: {
+      prompt:
+        'Implementa `validar_nombre(nombre: &str) -> Result<(), ErrorValidacion>`: menos de 3 caracteres → `Err(MuyCorto)`; más de 20 → `Err(MuyLargo)`; si no → `Ok(())`.',
+      starterCode: `#[derive(Debug, PartialEq)]
+enum ErrorValidacion {
+    MuyCorto,
+    MuyLargo,
+}
+
+fn validar_nombre(nombre: &str) -> Result<(), ErrorValidacion> {
+    // Tu código aquí
+}`,
+      tests: `fn main() {
+    assert_eq!(validar_nombre("ana"), Ok(()));
+    assert_eq!(validar_nombre("yo"), Err(ErrorValidacion::MuyCorto));
+    assert_eq!(validar_nombre("nombredeusuarioabsurdamentelargo"), Err(ErrorValidacion::MuyLargo));
+    ${PASS}
+}`,
+      solution: `#[derive(Debug, PartialEq)]
+enum ErrorValidacion {
+    MuyCorto,
+    MuyLargo,
+}
+
+fn validar_nombre(nombre: &str) -> Result<(), ErrorValidacion> {
+    if nombre.len() < 3 {
+        Err(ErrorValidacion::MuyCorto)
+    } else if nombre.len() > 20 {
+        Err(ErrorValidacion::MuyLargo)
+    } else {
+        Ok(())
+    }
+}`,
+    },
+  },
+  {
+    id: 'm07-propagate',
+    moduleId: 'm07',
+    name: 'Propagar con ?',
+    summary: 'Delegar errores al llamador con el operador ?.',
+    review: {
+      prompt:
+        'Escribe `sumar_strs(a: &str, b: &str) -> Result<i32, std::num::ParseIntError>` que parsee ambos textos (con `.trim()`) usando el operador `?` y devuelva la suma. Tres líneas.',
+      starterCode: `fn sumar_strs(a: &str, b: &str) -> Result<i32, std::num::ParseIntError> {
+    // Tu código aquí
+}`,
+      tests: `fn main() {
+    assert_eq!(sumar_strs("2", "3"), Ok(5));
+    assert_eq!(sumar_strs(" 10 ", "-4"), Ok(6));
+    assert!(sumar_strs("dos", "3").is_err());
+    ${PASS}
+}`,
+      solution: `fn sumar_strs(a: &str, b: &str) -> Result<i32, std::num::ParseIntError> {
+    let x: i32 = a.trim().parse()?;
+    let y: i32 = b.trim().parse()?;
+    Ok(x + y)
+}`,
+    },
+  },
+  {
+    id: 'm07-question-mark',
+    moduleId: 'm07',
+    name: 'Tuberías falibles',
+    summary: 'Encadenar parse + ? y envolver el resultado en Ok.',
+    review: {
+      prompt:
+        'Escribe `duplicar_parseado(s: &str) -> Result<i32, std::num::ParseIntError>`: parsea el texto (tras `.trim()`) propagando el error con `?`, y devuelve el doble en `Ok`.',
+      starterCode: `fn duplicar_parseado(s: &str) -> Result<i32, std::num::ParseIntError> {
+    // Tu código aquí
+}`,
+      tests: `fn main() {
+    assert_eq!(duplicar_parseado("21"), Ok(42));
+    assert_eq!(duplicar_parseado(" 5 "), Ok(10));
+    assert!(duplicar_parseado("x").is_err());
+    ${PASS}
+}`,
+      solution: `fn duplicar_parseado(s: &str) -> Result<i32, std::num::ParseIntError> {
+    let n: i32 = s.trim().parse()?;
+    Ok(n * 2)
+}`,
+    },
+  },
+  {
+    id: 'm07-tdd-palindromo',
+    moduleId: 'm07',
+    name: 'Hacer pasar los tests',
+    summary: 'Implementar una función contra un contrato de tests dado.',
+    review: {
+      prompt:
+        'Los tests son el contrato: implementa `es_palindromo(texto: &str) -> bool` que diga si el texto se lee igual al revés (el texto vacío cuenta como palíndromo). Pista: `.chars().rev().collect::<String>()`.',
+      starterCode: `fn es_palindromo(texto: &str) -> bool {
+    // Tu código aquí
+}`,
+      tests: `fn main() {
+    assert!(es_palindromo("oso"));
+    assert!(!es_palindromo("rust"));
+    assert!(es_palindromo(""));
+    ${PASS}
+}`,
+      solution: `fn es_palindromo(texto: &str) -> bool {
+    let invertido: String = texto.chars().rev().collect();
+    invertido == texto
+}`,
+    },
+  },
+  {
+    id: 'm07-slug',
+    moduleId: 'm07',
+    name: 'TDD: slug de URLs',
+    summary: 'Diseñar contra casos límite escritos de antemano.',
+    review: {
+      prompt:
+        'Implementa `slug(titulo: &str) -> String`: minúsculas, palabras unidas con `-`, espacios múltiples y de borde colapsados. `"Hola  Mundo "` → `"hola-mundo"`. Pista: `to_lowercase` + `split_whitespace` + `join`.',
+      starterCode: `fn slug(titulo: &str) -> String {
+    // Tu código aquí
+}`,
+      tests: `fn main() {
+    assert_eq!(slug("Hola Mundo"), "hola-mundo");
+    assert_eq!(slug("  Rust  es   genial  "), "rust-es-genial");
+    assert_eq!(slug(""), "");
+    ${PASS}
+}`,
+      solution: `fn slug(titulo: &str) -> String {
+    titulo
+        .to_lowercase()
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join("-")
+}`,
+    },
+  },
 ]
 
 const BY_ID = new Map(CONCEPTS.map((c) => [c.id, c]))

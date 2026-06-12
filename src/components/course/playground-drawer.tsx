@@ -247,7 +247,9 @@ export function PlaygroundDrawer() {
               <SheetTrigger asChild>
                 <Button
                   size="icon"
-                  className="fixed bottom-6 right-6 z-40 rounded-full size-14 shadow-lg hover:shadow-xl transition-shadow"
+                  // max() con safe-area: en iPhones con notch/barra dinámica el
+                  // FAB sube lo necesario para no quedar bajo la UI del sistema.
+                  className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] z-40 rounded-full size-14 shadow-lg hover:shadow-xl transition-shadow"
                   aria-label="Abrir playground"
                 >
                   <FlaskConical className="size-6" />

@@ -31,6 +31,11 @@ const module: Module = {
           "prompt": "**Tu reto:** escribe `suma(v: &[i32]) -> i32` que devuelva la suma de todos los elementos de la lista. Una lista vacía suma 0.\n\nRecibes la lista como `&[i32]` (una vista prestada). Inténtalo y dale a Verificar.",
           "starterCode": "fn suma(v: &[i32]) -> i32 {\n    // recorre la lista y acumula\n    \n}",
           "tests": "fn main() {\n    assert_eq!(suma(&[1, 2, 3]), 6);\n    assert_eq!(suma(&[10, -5, 5]), 10);\n    assert_eq!(suma(&[]), 0);\n    println!(\"__ALL_TESTS_PASSED__\");\n}",
+          "hints": [
+            "Hay dos caminos: recorrer la lista con un `for` acumulando en una variable `mut`, o dejar que un método del iterator haga el trabajo. Ambos valen.",
+            "`v.iter()` te da un iterator sobre los elementos, y los iteradores de números tienen un método `.sum()` que además maneja la lista vacía (devuelve 0).",
+            "Versión con bucle: `let mut total = 0;` luego `for n in v { total += n; }` y `total` como última expresión. Versión idiomática: una sola línea encadenando `.iter()` con `.sum()`."
+          ],
           "solution": "fn suma(v: &[i32]) -> i32 {\n    v.iter().sum()\n}",
           "reveal": "Un `Vec` (o un slice `&[i32]`) se recorre con `.iter()`, y muchas operaciones comunes ya vienen listas. Sumar es una de ellas:\n\n```rust\nfn suma(v: &[i32]) -> i32 {\n    v.iter().sum()\n}\n```\n\nTambién podrías hacerlo con un bucle `for` y un acumulador `mut` — funciona igual. Pero `.iter().sum()` comunica la intención de un vistazo. En esta lección verás cómo crear, llenar y recorrer `Vec`, y por qué el ownership sigue importando dentro de ellos. 👇"
         },
@@ -108,7 +113,8 @@ const module: Module = {
               "text": "No hay diferencia real",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Un array `[i32; 5]` tiene tamaño fijo conocido en compilación y vive en el stack; un `Vec<i32>` guarda sus elementos en el heap y puede crecer con `.push()` o encogerse en runtime. La velocidad no es la diferencia clave: para recorrerlos son prácticamente iguales."
         },
         {
           "type": "quiz",
@@ -130,7 +136,8 @@ const module: Module = {
               "text": "Un error de compilación",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "`.get(i)` devuelve `Option<&T>`: `Some(&valor)` si el índice existe y `None` si no — sin panic. El que sí hace panic con índices fuera de rango es el acceso con corchetes (`vec[10]`). Por eso `.get()` es la opción segura cuando el índice viene de datos externos."
         },
         {
           "type": "exercise",
@@ -167,11 +174,16 @@ const module: Module = {
           "type": "challenge",
           "conceptId": "m05-string-reverse",
           "title": "Antes de leer: dale la vuelta a un texto",
-          "prompt": "**Tu reto:** escribe `invertir(s: &str) -> String` que devuelva el texto al revés. Por ejemplo, `invertir(\"hola\")` devuelve `\"aloh\"`.\n\nPista: un texto se puede recorrer carácter por carácter con `.chars()`. Inténtalo y dale a Verificar.",
+          "prompt": "**Tu reto:** escribe `invertir(s: &str) -> String` que devuelva el texto al revés. Por ejemplo, `invertir(\"hola\")` devuelve `\"aloh\"`.\n\nOjo: en Rust un texto **no es un array de letras**. ¿Qué pasaría con `\"año\"` o con un `\"🦀\"` si lo invirtieras byte a byte? Tenlo en mente mientras lo intentas.\n\nPista: un texto se puede recorrer carácter por carácter con `.chars()`. Inténtalo y dale a Verificar.",
           "starterCode": "fn invertir(s: &str) -> String {\n    // recorre los caracteres al revés y reúnelos\n    \n}",
           "tests": "fn main() {\n    assert_eq!(invertir(\"hola\"), \"aloh\");\n    assert_eq!(invertir(\"rust\"), \"tsur\");\n    assert_eq!(invertir(\"\"), \"\");\n    println!(\"__ALL_TESTS_PASSED__\");\n}",
+          "hints": [
+            "Un `&str` no se puede indexar (`s[0]` no compila), así que olvida la estrategia de \"recorrer posiciones de atrás hacia adelante\". Piensa en **caracteres**, no en bytes ni índices.",
+            "`.chars()` te da un iterator de caracteres, y los iteradores tienen un método `.rev()` que los recorre en orden inverso.",
+            "Te falta el último paso: reunir esos caracteres invertidos en un `String`. El método que materializa un iterator en una colección es `.collect()` — y como la función ya declara que devuelve `String`, `collect` sabe qué construir."
+          ],
           "solution": "fn invertir(s: &str) -> String {\n    s.chars().rev().collect()\n}",
-          "reveal": "La forma idiomática encadena tres pasos: recorrer caracteres, invertirlos y reunirlos en un `String`:\n\n```rust\nfn invertir(s: &str) -> String {\n    s.chars().rev().collect()\n}\n```\n\n¿Por qué `.chars()` y no recorrer bytes? Porque en Rust un texto es **UTF-8**: una `á` o un `🦀` ocupan varios bytes, pero son **un** carácter. `.chars()` respeta eso; invertir los bytes a mano rompería esos caracteres. Por eso Rust trata el texto con tanto cuidado — algo que verás en esta lección. 👇"
+          "reveal": "Primero, lo importante: ¿por qué no se puede invertir un texto byte a byte? Porque en Rust un texto es **UTF-8**: una `ñ` ocupa 2 bytes y un `🦀` ocupa 4, pero ambos son **un solo** carácter. Si invirtieras los bytes a lo bruto, partirías esos caracteres por la mitad y el resultado ni siquiera sería UTF-8 válido. `.chars()` existe justo para eso: recorre el texto carácter a carácter, respetando los límites reales de cada uno.\n\nCon esa pieza, la forma idiomática encadena tres pasos — recorrer caracteres, invertir el orden y reunirlos en un `String`:\n\n```rust\nfn invertir(s: &str) -> String {\n    s.chars().rev().collect()\n}\n```\n\nPor eso Rust trata el texto con tanto cuidado: el texto real del mundo no es ASCII. Es lo que verás a fondo en esta lección. 👇"
         },
         {
           "type": "text",
@@ -242,7 +254,8 @@ const module: Module = {
               "text": "Es un bug que se arreglara",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Los strings de Rust son bytes **UTF-8**: un carácter puede ocupar de 1 a 4 bytes, así que el byte en la posición 0 no es necesariamente un carácter completo. Rust te obliga a elegir explícitamente: `.chars().nth(0)` para caracteres o `.bytes()` para bytes. No es por inmutabilidad — tampoco compila con un `String` mutable."
         },
         {
           "type": "quiz",
@@ -264,7 +277,8 @@ const module: Module = {
               "text": "&str es más rápido que String",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "`String` es dueña de su texto (owned): vive en el heap y puede crecer o modificarse. `&str` es una vista prestada (borrow) sobre texto que ya existe — un literal o una porción de un `String`. No es cuestión de tamaño ni de velocidad: es la misma distinción ownership/borrowing de siempre, aplicada a texto."
         },
         {
           "type": "exercise",
@@ -304,6 +318,11 @@ const module: Module = {
           "prompt": "**Tu reto:** escribe `palabras_distintas(texto: &str) -> usize` que cuente cuántas palabras **distintas** hay (separadas por espacios). Por ejemplo, `\"a b a c\"` tiene 3 distintas.\n\nPista: `texto.split_whitespace()` te da las palabras una por una. ¿Cómo evitas contar repetidas? Inténtalo y dale a Verificar.",
           "starterCode": "use std::collections::HashSet;\n\nfn palabras_distintas(texto: &str) -> usize {\n    // cuenta solo las distintas\n    \n}",
           "tests": "fn main() {\n    assert_eq!(palabras_distintas(\"a b a c\"), 3);\n    assert_eq!(palabras_distintas(\"hola hola hola\"), 1);\n    assert_eq!(palabras_distintas(\"\"), 0);\n    println!(\"__ALL_TESTS_PASSED__\");\n}",
+          "hints": [
+            "Necesitas una colección que descarte duplicados sola. El `use std::collections::HashSet;` del enunciado es la pista: un `HashSet` solo guarda valores únicos.",
+            "Camino explícito: crea un `HashSet` mutable e inserta cada palabra de `texto.split_whitespace()` con `.insert()`; las repetidas se ignoran. Al final, `.len()`.",
+            "Camino directo: el iterator de `split_whitespace()` se puede materializar en un set con `.collect::<HashSet<_>>()`, y su `.len()` es la cantidad de palabras distintas."
+          ],
           "solution": "use std::collections::HashSet;\n\nfn palabras_distintas(texto: &str) -> usize {\n    texto.split_whitespace().collect::<HashSet<_>>().len()\n}",
           "reveal": "La clave es una **colección que no permite duplicados**: una `HashSet`. Al meter todas las palabras en ella, las repetidas se descartan solas, y `.len()` te da cuántas únicas quedaron:\n\n```rust\nuse std::collections::HashSet;\n\nfn palabras_distintas(texto: &str) -> usize {\n    texto.split_whitespace().collect::<HashSet<_>>().len()\n}\n```\n\n`HashSet` y `HashMap` son hermanos: el `Set` guarda solo claves únicas; el `Map` guarda claves únicas con un valor asociado (ideal para *contar* cuántas veces aparece cada palabra). Ambos encuentran las cosas \"calculando dónde deberían estar\" en vez de recorrer toda la lista. Eso es lo que verás ahora. 👇"
         },
@@ -376,7 +395,8 @@ const module: Module = {
               "text": "Crear un nuevo HashMap para cada palabra",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "`entry(palabra).or_insert(0)` resuelve \"inserta 0 si no existe y dame una referencia mutable al valor\" en **un solo lookup**; luego `*cuenta += 1` incrementa. La alternativa con `.contains()` + `.insert()` funciona, pero hace dos búsquedas y duplica código — es el anti-patrón que `entry` elimina."
         },
         {
           "type": "quiz",
@@ -398,7 +418,8 @@ const module: Module = {
               "text": "Error de compilación",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "`get` devuelve `Option<&V>`: `Some(&valor)` si la clave existe, `None` si no. Nada de panics ni valores por defecto mágicos — el `Option` te obliga a decidir qué hacer cuando falta la clave. El que sí hace panic si la clave no existe es el acceso con corchetes (`map[\"clave\"]`)."
         },
         {
           "type": "exercise",
@@ -438,6 +459,10 @@ const module: Module = {
           "prompt": "**Tu reto:** escribe `aplicar_dos_veces` que reciba una función `f` y un número `x`, y devuelva el resultado de aplicar `f` **dos veces** a `x`. Por ejemplo, con `f = |n| n + 1` y `x = 5`, el resultado es `7` (5 → 6 → 7).\n\nLa firma con `<F: Fn(i32) -> i32>` ya está puesta. Inténtalo y dale a Verificar.",
           "starterCode": "fn aplicar_dos_veces<F: Fn(i32) -> i32>(f: F, x: i32) -> i32 {\n    // aplica f a x, y luego f al resultado\n    \n}",
           "tests": "fn main() {\n    assert_eq!(aplicar_dos_veces(|n| n + 1, 5), 7);\n    assert_eq!(aplicar_dos_veces(|n| n * 2, 3), 12);\n    println!(\"__ALL_TESTS_PASSED__\");\n}",
+          "hints": [
+            "Aunque `f` venga como parámetro, es un valor **invocable**: lo llamas igual que cualquier función, `f(x)`, y devuelve un `i32`.",
+            "\"Aplicar dos veces\" significa que el resultado de la primera llamada es la entrada de la segunda: guarda `f(x)` en una variable intermedia y vuelve a aplicarle `f` — o anida las llamadas directamente."
+          ],
           "solution": "fn aplicar_dos_veces<F: Fn(i32) -> i32>(f: F, x: i32) -> i32 {\n    f(f(x))\n}",
           "reveal": "Una **closure** es una función que puedes guardar en una variable o **pasar como argumento**, igual que cualquier otro dato. `|n| n + 1` es una closure que suma 1.\n\n```rust\nfn aplicar_dos_veces<F: Fn(i32) -> i32>(f: F, x: i32) -> i32 {\n    f(f(x))   // aplica f, y al resultado le aplica f otra vez\n}\n```\n\nEl `<F: Fn(i32) -> i32>` dice: *\"F es cualquier cosa que se pueda llamar con un `i32` y devuelva un `i32`\"*. Esto es lo que hace posible `.map(...)`, `.filter(...)` y toda la maquinaria de iteradores: les pasas comportamiento como si fuera un valor. Eso es lo que verás ahora. 👇"
         },
@@ -551,7 +576,8 @@ const module: Module = {
               "text": "Solo funciona con números",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Lo distintivo de una closure es que **captura** variables del entorno donde se define: `|n| n > umbral` usa `umbral` sin recibirlo como parámetro. Una `fn` normal solo ve sus parámetros. No hay diferencia de velocidad relevante: las closures compilan a código tan eficiente como una función."
         },
         {
           "type": "quiz",
@@ -573,7 +599,8 @@ const module: Module = {
               "text": "Ninguno, el código no compila",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Modificar una variable capturada (`contador += 1`) requiere un préstamo mutable (`&mut`), y eso es exactamente lo que define a `FnMut`. `Fn` solo lee (préstamo inmutable) y `FnOnce` consume las capturas (move), por lo que solo puede llamarse una vez. El código sí compila — siempre que declares la closure con `mut`."
         },
         {
           "type": "quiz",
@@ -595,7 +622,8 @@ const module: Module = {
               "text": "{x -> x * 2}",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "En Rust los parámetros de una closure van entre barras verticales: `|x| x * 2`. Los distractores son de otros lenguajes: `lambda x:` es Python, las arrow functions con `=>` son de JavaScript y `{ x -> ... }` es Kotlin."
         },
         {
           "type": "exercise",
@@ -641,7 +669,7 @@ const module: Module = {
             },
             {
               "kind": "faded",
-              "instructions": "**Paso 2 — completa.** Ahora además de filtrar pares, hay que elevarlos al cuadrado con `map` antes de sumar. Rellena los `___`.",
+              "instructions": "**Paso 2 — completa.** Ahora además de filtrar pares, hay que elevarlos al cuadrado con `map` antes de sumar. Los `___` son huecos que debes rellenar: el **primero** es un operador aritmético (¿con qué operación elevas `n` al cuadrado usando `n` dos veces?), y el **segundo** es el método terminal que suma todos los elementos del iterador.",
               "code": "fn suma_pares_al_cuadrado(nums: &[i32]) -> i32 {\n    nums.iter()\n        .filter(|&&n| n % 2 == 0)\n        .map(|&n| n ___ n)\n        .___()\n}"
             },
             {
@@ -782,7 +810,8 @@ const module: Module = {
               "text": "Cuenta los elementos",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "`.filter()` es un **adaptador**: crea un nuevo iterador perezoso que solo deja pasar los elementos donde la closure devuelve `true`. No toca el vector original ni ordena ni cuenta — para materializar el resultado necesitas un consumidor como `.collect()` o `.count()`."
         },
         {
           "type": "quiz",
@@ -804,15 +833,16 @@ const module: Module = {
               "text": "No son eficientes, los bucles for son más rápidos",
               "correct": false
             }
-          ]
+          ],
+          "explanation": "Cada elemento recorre toda la cadena (`filter` → `map` → ...) de uno en uno, sin crear vectores intermedios en cada paso: eso es la evaluación perezosa (lazy). Además el compilador optimiza la cadena a algo equivalente a un bucle manual (zero-cost abstraction). No hay hilos involucrados — ser compilado no explica por sí solo esta eficiencia."
         },
         {
           "type": "exercise",
           "title": "Pipeline de iteradores: estadísticas de logs",
           "language": "rust",
-          "prompt": "Tienes un slice de strings, cada uno representa una línea de log con formato `\"LEVEL message...\"`. Quieres calcular las **estadísticas de errores**:\n\n1. **Total de líneas ERROR**: cuenta cuántas empiezan con `\"ERROR \"`.\n2. **Promedio de longitud** de las líneas ERROR (cantidad de bytes).\n3. **El mensaje de error más largo**.\n\nTu tarea: implementa los 3 cálculos **sin usar `for` loops** — todo con iteradores encadenados. Usa `.filter()`, `.map()`, `.count()`, `.sum::<usize>()`, `.max_by_key()`.\n\nFirmas:\n```rust\nfn error_count(logs: &[&str]) -> usize\nfn error_avg_length(logs: &[&str]) -> f64\nfn longest_error(logs: &[&str]) -> Option<&str>\n```",
-          "starterCode": "fn error_count(logs: &[&str]) -> usize {\n    todo!()\n}\n\nfn error_avg_length(logs: &[&str]) -> f64 {\n    todo!()\n}\n\nfn longest_error(logs: &[&str]) -> Option<&str> {\n    todo!()\n}\n\nfn main() {\n    let logs = [\n        \"INFO server started on :8080\",\n        \"ERROR connection refused to db.host:5432\",\n        \"INFO health check ok\",\n        \"ERROR timeout reading from upstream after 30s waiting response\",\n        \"WARN slow query detected, 2.3s\",\n        \"ERROR 401 unauthorized\",\n    ];\n\n    println!(\"Errores: {}\", error_count(&logs));\n    println!(\"Promedio long. error: {:.1}\", error_avg_length(&logs));\n    println!(\"Más largo: {:?}\", longest_error(&logs));\n}",
-          "solution": "fn error_count(logs: &[&str]) -> usize {\n    logs.iter().filter(|l| l.starts_with(\"ERROR \")).count()\n}\n\nfn error_avg_length(logs: &[&str]) -> f64 {\n    let errors: Vec<&&str> = logs.iter().filter(|l| l.starts_with(\"ERROR \")).collect();\n    if errors.is_empty() {\n        return 0.0;\n    }\n    let total: usize = errors.iter().map(|l| l.len()).sum();\n    total as f64 / errors.len() as f64\n}\n\nfn longest_error(logs: &[&str]) -> Option<&str> {\n    logs.iter()\n        .filter(|l| l.starts_with(\"ERROR \"))\n        .max_by_key(|l| l.len())\n        .copied()\n}\n\nfn main() {\n    let logs = [\n        \"INFO server started on :8080\",\n        \"ERROR connection refused to db.host:5432\",\n        \"INFO health check ok\",\n        \"ERROR timeout reading from upstream after 30s waiting response\",\n        \"WARN slow query detected, 2.3s\",\n        \"ERROR 401 unauthorized\",\n    ];\n\n    println!(\"Errores: {}\", error_count(&logs));\n    println!(\"Promedio long. error: {:.1}\", error_avg_length(&logs));\n    println!(\"Más largo: {:?}\", longest_error(&logs));\n}",
+          "prompt": "Tienes un slice de strings, cada uno representa una línea de log con formato `\"LEVEL message...\"`. Quieres calcular las **estadísticas de errores**:\n\n1. **Total de líneas ERROR**: cuenta cuántas empiezan con `\"ERROR \"`.\n2. **Promedio de longitud** de las líneas ERROR (cantidad de bytes).\n3. **El mensaje de error más largo**.\n\nTu tarea: implementa los 3 cálculos **sin usar `for` loops** — todo con iteradores encadenados. Usa `.filter()`, `.map()`, `.count()`, `.sum::<usize>()`, `.max_by_key()`.\n\nFirmas:\n```rust\nfn error_count(logs: &[&str]) -> usize\nfn error_avg_length(logs: &[&str]) -> f64\nfn longest_error<'a>(logs: &[&'a str]) -> Option<&'a str>\n```\n\n¿Notas el `'a` en la tercera? Recuerda m03: `&[&str]` tiene **dos** lifetimes de entrada (el del slice y el de los textos internos), así que las reglas de elision no pueden decidir solas de cuál depende el retorno. Anotamos que el resultado vive lo que viven los textos internos.",
+          "starterCode": "fn error_count(logs: &[&str]) -> usize {\n    todo!()\n}\n\nfn error_avg_length(logs: &[&str]) -> f64 {\n    todo!()\n}\n\nfn longest_error<'a>(logs: &[&'a str]) -> Option<&'a str> {\n    todo!()\n}\n\nfn main() {\n    let logs = [\n        \"INFO server started on :8080\",\n        \"ERROR connection refused to db.host:5432\",\n        \"INFO health check ok\",\n        \"ERROR timeout reading from upstream after 30s waiting response\",\n        \"WARN slow query detected, 2.3s\",\n        \"ERROR 401 unauthorized\",\n    ];\n\n    println!(\"Errores: {}\", error_count(&logs));\n    println!(\"Promedio long. error: {:.1}\", error_avg_length(&logs));\n    println!(\"Más largo: {:?}\", longest_error(&logs));\n}",
+          "solution": "fn error_count(logs: &[&str]) -> usize {\n    logs.iter().filter(|l| l.starts_with(\"ERROR \")).count()\n}\n\nfn error_avg_length(logs: &[&str]) -> f64 {\n    let errors: Vec<&&str> = logs.iter().filter(|l| l.starts_with(\"ERROR \")).collect();\n    if errors.is_empty() {\n        return 0.0;\n    }\n    let total: usize = errors.iter().map(|l| l.len()).sum();\n    total as f64 / errors.len() as f64\n}\n\nfn longest_error<'a>(logs: &[&'a str]) -> Option<&'a str> {\n    logs.iter()\n        .filter(|l| l.starts_with(\"ERROR \"))\n        .max_by_key(|l| l.len())\n        .copied()\n}\n\nfn main() {\n    let logs = [\n        \"INFO server started on :8080\",\n        \"ERROR connection refused to db.host:5432\",\n        \"INFO health check ok\",\n        \"ERROR timeout reading from upstream after 30s waiting response\",\n        \"WARN slow query detected, 2.3s\",\n        \"ERROR 401 unauthorized\",\n    ];\n\n    println!(\"Errores: {}\", error_count(&logs));\n    println!(\"Promedio long. error: {:.1}\", error_avg_length(&logs));\n    println!(\"Más largo: {:?}\", longest_error(&logs));\n}",
           "hints": [
             "`.starts_with(\"ERROR \")` devuelve `bool` — perfecto para `.filter()`. Recuerda el espacio después: sin él contarías 'ERROR_PARSE' o similares.",
             "Para el promedio: necesitas `total / count`. Como `count` es `usize`, debes convertir ambos a `f64` antes de dividir. Maneja el caso de 0 errores para no dividir por cero.",

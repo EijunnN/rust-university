@@ -141,6 +141,33 @@ body {
   background-color: var(--shiki-dark-bg);
 }
 
+/* Sombras de scroll horizontal en bloques de código (crítico en mobile):
+   una sombra sutil en el borde indica "hay más código hacia ese lado".
+   Las capas `local` (que se desplazan con el contenido) cubren la sombra
+   cuando ya no hay nada más que ver en esa dirección. */
+pre.shiki {
+  background-image:
+    linear-gradient(to right, var(--shiki-light-bg) 50%, transparent),
+    linear-gradient(to left, var(--shiki-light-bg) 50%, transparent),
+    radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / 0.35), transparent),
+    radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 0.35), transparent);
+  background-position: left center, right center, left center, right center;
+  background-repeat: no-repeat;
+  background-size: 36px 100%, 36px 100%, 12px 100%, 12px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+.dark pre.shiki {
+  background-image:
+    linear-gradient(to right, var(--shiki-dark-bg) 50%, transparent),
+    linear-gradient(to left, var(--shiki-dark-bg) 50%, transparent),
+    radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / 0.6), transparent),
+    radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / 0.6), transparent);
+  background-position: left center, right center, left center, right center;
+  background-repeat: no-repeat;
+  background-size: 36px 100%, 36px 100%, 12px 100%, 12px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
 /* Glosario inline — términos técnicos detectados por rehype-glossary.
    Subrayado punteado discreto + cursor "help" para que se sienta clickable
    sin gritar. En hover se intensifica para confirmar el affordance. */
