@@ -91,6 +91,11 @@ type LoaderData = {
 export const Route = createFileRoute(
   '/_app/courses/$moduleSlug/lesson/$lessonId',
 )({
+  // Sin esto, navegar entre lecciones NO desmonta LessonPage (mismo route,
+  // distinto param) y React conserva el estado de los bloques interactivos:
+  // retos verificados, quizzes respondidos y el contenido de CodeMirror de
+  // la lección anterior se filtran a la nueva.
+  remountDeps: ({ params }) => params,
   loader: async ({ params }): Promise<LoaderData> => {
     const module = await loadModule(params.moduleSlug)
     if (!module) throw notFound()
